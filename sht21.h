@@ -27,7 +27,7 @@ class SHT21
   private:
     int _pin;
 	float CalcRH(uint16_t rawRH);
-	float CalcTemperature(uint16_t* rawTemperature);
+	float CalcTemperature(uint16_t rawTemperature);
 	
 };
 
