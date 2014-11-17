@@ -7,12 +7,13 @@
 #include "Energia.h"
 #include "sht21.h"
 
-SWI2C myI2C;    // instantiate softwareI2C class
+
 
 
 SHT21::SHT21(uint8_t pinSDA, uint8_t pinSCL)
 {
-  myI2C.setI2Cpins(pinSDA,pinSCL);
+  SWI2C myI2C (pinSDA,pinSCL);    // instantiate local softwareI2C class
+  //myI2C.setI2Cpins(pinSDA,pinSCL);
   myI2C.begin();
   
 }
