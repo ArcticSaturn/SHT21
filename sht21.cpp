@@ -50,12 +50,13 @@ void SHT21::MeasurePolling(enmMeasureType MeasureType, uint16_t* MeasValue, floa
 	
 	*MeasValue=(uint16_t)data1*256;
 	*MeasValue+=data2;
-	*MeasValue2=CalcTemperature(MeasValue);
+	*MeasValue2=CalcTemperature(*MeasValue);
 }
 
 
-float SHT21::CalcTemperature(uint16_t* rawTemperature)
+float SHT21::CalcTemperature(uint16_t rawTemperature)
 {
 	float result;
-	result=-46.85 + 175.72*(*rawTemperature)/65536;
+	result=-46.85 + 175.72*(rawTemperature)/65536;
+	return result;
 }
