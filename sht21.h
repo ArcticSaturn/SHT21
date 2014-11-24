@@ -15,7 +15,7 @@
 
 /*
 * General defines
-*/
+*/
 #define START_T_MEAS_HM		0xE3 	// start temperature meas. hold master
 #define START_RH_MEAS_HM	0xE5 	// start humidity meas. hold master
 #define START_T_MEAS_POLL	0xF3 	// start temperature meas. no hold master
@@ -29,15 +29,15 @@
 #define RES_10_13BIT		0x80	// RH=10bit, T=13bit
 #define RES_11_11BIT		0x81	// RH=11bit, T=11bit
 
-#define RH_8BIT			0x3B	// RH=8bit,  was 0x01
-#define RH_10BIT		0xBA	// RH=10bit, was 0x80
-#define RH_11BIT		0xBB	// RH=11bit, was 0x81
-#define RH_12BIT		0x3A	// RH=12bit, was 0x00
+#define RH_8BIT			0x01	// RH=8bit,  was 0x01
+#define RH_10BIT		0x10	// RH=10bit, was 0x80
+#define RH_11BIT		0x11	// RH=11bit, was 0x81
+#define RH_12BIT		0x00	// RH=12bit, was 0x00
 
-#define T_11BIT			0x83	// RH=11bit
-#define T_12BIT			0x03	// RH=12bit
-#define T_13BIT			0x82	// RH=13bit
-#define T_14BIT			0x02	// RH=14bit
+#define T_11BIT			0x81	// T=11bit
+#define T_12BIT			0x01	// T=12bit
+#define T_13BIT			0x10	// T=13bit
+#define T_14BIT			0x00	// T=14bit
 
 #define RES_MASK		0x81	// Mask for res. bits (7,0) in user reg.
 
@@ -51,7 +51,9 @@
 #define I2C_ADDR_W		0x80	// I2C address for write access
 #define I2C_ADDR_R		0x81	// I2C address for read access
 
-// measurement signal selection
+/*
+* measurement signal selection
+*/
 typedef enum{
 HUMIDITY,
 TEMPERATURE
@@ -66,7 +68,6 @@ class SHT21
 	void Measure(enmMeasureType MeasureType, uint8_t Resolution, uint16_t *pRawMeasValue, float *pMeasValue);
 	
   //private:
-	//int _pin;
 	float CalcTemperature(uint16_t rawTemperature);
 	float CalcHumidity(uint16_t rawHumidity);
 	void ReadUserRegister(uint8_t *pRegisterValue);

@@ -1,12 +1,20 @@
 /*
-  Morse.cpp - Library for flashing Morse code.
-  Created by David A. Mellis, November 2, 2007.
-  Released into the public domain.
+* SHT21 library for Energia
+*
+* Author: 	ArcticSaturn
+* Date:		Nov 2014
+* Rev:		1.0
+*
+* open items:
+* - implement hold master measurement
+* - change calculation of temperature/humidity to integer calculation
+    to save code size
+*   result=-46.85 + 175.72*(float)rawTemperature/65536;
+*   result = 21965*raw>>13 - 46850  21965= 175720/8
 */
 
 #include "Energia.h"
 #include "sht21.h"
-
 
 SWI2C myI2C (8,9);    // instantiate local softwareI2C class
   
@@ -66,36 +74,6 @@ void SHT21::WriteUserRegister(uint8_t pRegisterValue)
 	myI2C.i2cStop();
 }
 
-
-// INPUT: 	MeasureType = HUMIDITY, TEMPERATURE
-//			MeasValue = address pointer to variable
-void SHT21::MeasurePolling(enmMeasureType MeasureType, uint16_t *pRawMeasValue, float *pMeasValue)
-{
-	uint8_t data1, data2;
-
-	// ===========================================================
-	//              SHT21 TEMPERATURE MEASUREMENT
-	// ===========================================================
-	myI2C.i2cStart();
-	myI2C.i2cWrite(0x80);   // 0b10000000  sensor addres + write attempt
-	myI2C.i2cWrite(0xE6);   // write register
-	myI2C.i2cWrite(0x82);   // set resolution to 11bit
-	myI2C.i2cStart();
-	myI2C.i2cWrite(0x80);   // 0b10000000  sensor addres + write attempt
-	myI2C.i2cWrite(0xF3);   // trigger temp measure; no hold master
-	delay(43);              // wait for measurment end
-	myI2C.i2cStart();       
-	myI2C.i2cWrite(0x81);   // 0b10000000  sensor addres + read attempt
-	data1 = myI2C.i2cRead(1);   // get meas value MSByte
-	data2 = myI2C.i2cRead(1);   // get meas value LSByte
-	myI2C.i2cRead(0);           // get CRC8 value
-	myI2C.i2cStop();        // end I2C transmission
-	
-	*pRawMeasValue=(uint16_t)data1*256;
-	*pRawMeasValue+=data2;
-	*pMeasValue=CalcTemperature(*pRawMeasValue);
-}
-
 void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution, 
 		uint16_t *pRawMeasValue, float *pMeasValue)
 {
@@ -105,8 +83,9 @@ void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution,
 	// read user register and set resolution values
 	ReadUserRegister(&_UsrRegValue);
 	_UsrRegValue = (_UsrRegValue & ~RES_MASK) | Resolution;
-	//WriteUserRegister(_UsrRegValue);
-	WriteUserRegister(Resolution);
+	WriteUserRegister(_UsrRegValue);
+	
+	//WriteUserRegister(Resolution);  // work around for not working SHT21
 	
 	
 	myI2C.i2cStart();
@@ -115,12 +94,13 @@ void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution,
 	if(MeasureType == TEMPERATURE)
 		myI2C.i2cWrite2(START_T_MEAS_POLL);   // trigger Temp measure; no hold master
 	else
-		myI2C.i2cWrite2(START_RH_MEAS_POLL);   // trigger RH measure; no hold master
+		myI2C.i2cWrite2(START_RH_MEAS_HM);   // trigger RH measure; no hold master
 	
-	/*delay(150);
+	//delay(350);
 	myI2C.i2cStart();
 	myI2C.i2cWrite(I2C_ADDR_R);
-	*/
+	
+	
 	// polling until slave send acknowledge bit
 	do {
 		delay(10);
