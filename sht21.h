@@ -65,11 +65,16 @@ class SHT21
 	SHT21(uint8_t pinSDA, uint8_t pinSCL);
 	void SoftReset();
 	void MeasurePolling(enmMeasureType MeasureType, uint16_t *pRawMeasValue, float *pMeasValue);
-	void Measure(enmMeasureType MeasureType, uint8_t Resolution, uint16_t *pRawMeasValue, float *pMeasValue);
+	void Measure(enmMeasureType MeasureType, uint8_t Resolution, uint16_t *pRawMeasValue);
+	long CalcTemperature(uint16_t rawTemperature);
+	long CalcHumidity(uint16_t rawHumidity);
 	
-  //private:
-	float CalcTemperature(uint16_t rawTemperature);
-	float CalcHumidity(uint16_t rawHumidity);
+ // private:
+	float CalcTemperature2(uint16_t rawTemperature);
+	
+	float CalcHumidity2(uint16_t rawHumidity);
+	
+	
 	void ReadUserRegister(uint8_t *pRegisterValue);
 	void WriteUserRegister(uint8_t pRegisterValue);
 };

@@ -16,12 +16,12 @@
 #include "Energia.h"
 #include "sht21.h"
 
-SWI2C myI2C (8,9);    // instantiate local softwareI2C class
+SWI2C myI2C (5,6);    // instantiate local softwareI2C class
   
 
 SHT21::SHT21(uint8_t pinSDA, uint8_t pinSCL)
 {
-	//SWI2C myI2C (pinSDA,pinSCL);    // instantiate local softwareI2C class
+	SWI2C myI2C (pinSDA,pinSCL);    // instantiate local softwareI2C class
 	myI2C.setI2Cpins(pinSDA,pinSCL);
 	myI2C.begin();
 	
@@ -60,10 +60,10 @@ void SHT21::ReadUserRegister(uint8_t *pRegisterValue)
 }
 
 /*
-* Write user register of SHT21
-* input: pointer to variable with new register content
-* output: n/a
-*/
+ * Write user register of SHT21
+ * input: pointer to variable with new register content
+ * output: n/a
+ */
 void SHT21::WriteUserRegister(uint8_t pRegisterValue)
 {
 	myI2C.i2cStart();
@@ -71,11 +71,20 @@ void SHT21::WriteUserRegister(uint8_t pRegisterValue)
 	myI2C.i2cWrite(USER_REG_W);
 	myI2C.i2cWrite(pRegisterValue);
 	delayMicroseconds(10);
-	myI2C.i2cStop();
+	//myI2C.i2cStop();
 }
 
+/*
+ * Performs a measurement of SHT21
+ * input:	MeasureType	TEMPERATURE or HUMIDITY
+ *		Resolution	sets the desired resolution of the measurement
+		*pRawMeasValue	pointer with measured values
+		*pMeasValue	pointer with calculated value
+ * output:	_MsgCorrect	0 if not correct
+ * 				1 if correct
+ */
 void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution, 
-		uint16_t *pRawMeasValue, float *pMeasValue)
+		uint16_t *pRawMeasValue)
 {
 	uint8_t _data1, _data2;
 	uint8_t _UsrRegValue;
@@ -94,9 +103,9 @@ void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution,
 	if(MeasureType == TEMPERATURE)
 		myI2C.i2cWrite2(START_T_MEAS_POLL);   // trigger Temp measure; no hold master
 	else
-		myI2C.i2cWrite2(START_RH_MEAS_HM);   // trigger RH measure; no hold master
+		myI2C.i2cWrite2(START_RH_MEAS_POLL);   // trigger RH measure; no hold master
 	
-	//delay(350);
+	//delay(100);
 	myI2C.i2cStart();
 	myI2C.i2cWrite(I2C_ADDR_R);
 	
@@ -114,23 +123,48 @@ void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution,
 	myI2C.i2cRead(0);           // get CRC8 value
 	myI2C.i2cStop();        // end I2C transmission
 	
-	// conversion to float values
+	// conversion to uint16_t values
 	*pRawMeasValue=(uint16_t)_data1*256;	// shift 8 times to left
 	_data2&=0xFC;				// clear bit1/bit0 as these are status bits
 	*pRawMeasValue+=_data2;	
-	if(MeasureType == TEMPERATURE)
+	/*if(MeasureType == TEMPERATURE)
 		*pMeasValue=CalcTemperature(*pRawMeasValue);
 	else
 		*pMeasValue=CalcHumidity(*pRawMeasValue);
+	*/
 }
 
-float SHT21::CalcTemperature(uint16_t rawTemperature)
+long SHT21::CalcTemperature(uint16_t rawTemperature)
+{
+	//-46.85 + 175.72*(float)rawTemperature/65536;
+	//21965= 175720/8
+	long result;
+	result = long(21965*(long)rawTemperature);
+	result = result >> 13;
+	result -= 46850;
+	return result;
+
+}
+
+long SHT21::CalcHumidity(uint16_t rawHumidity)
+{
+	//-6+125*(float)rawHumidity/65536;
+	//15625= 125000/8
+	long result;
+	result = long(15625*(long)rawHumidity);
+	result = result >> 13;
+	result -= 6000;
+	return result;
+
+}
+
+float SHT21::CalcTemperature2(uint16_t rawTemperature)
 {
 	float result;
 	result=-46.85 + 175.72*(float)rawTemperature/65536;
 	return result;
 }
-float SHT21::CalcHumidity(uint16_t rawHumidity)
+float SHT21::CalcHumidity2(uint16_t rawHumidity)
 {
 	float result;
 	result=-6+125*(float)rawHumidity/65536;
