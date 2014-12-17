@@ -38,7 +38,7 @@ void SHT21::SoftReset()
 	myI2C.i2cWrite(I2C_ADDR_W);
 	myI2C.i2cWrite(SOFT_RESET);
 	myI2C.i2cStop();
-	delay(15);	// wait for reset to end
+	delayMicroseconds(15000);	// wait for reset to end
 }
 
 
@@ -112,7 +112,7 @@ void SHT21::Measure(enmMeasureType MeasureType, uint8_t Resolution,
 	
 	// polling until slave send acknowledge bit
 	do {
-		delay(10);
+		delayMicroseconds(10000);
 		myI2C.i2cStart();       
 	}while(	myI2C.i2cWrite(I2C_ADDR_R) == NO_I2C_ACK ); 
 		
